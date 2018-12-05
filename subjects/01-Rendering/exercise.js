@@ -29,10 +29,45 @@ const DATA = {
   ]
 };
 
-function Menu() {
-  return <div>Open the console, you have failing tests.</div>;
+let filterVal = "mexican";
+let sortVal = "name";
+  
+const filtered = (event) => {
+  filterVal = event.target.value;
+  return updateThePage();
+};
+
+const clicked = () => {
+  sortVal = (sortVal.charAt(0) === '-') ? 'name' : '-name'; 
+  return updateThePage();
 }
 
+const updateThePage = () => {
+  return ReactDOM.render(<Menu />, document.getElementById("app"));
+};
+
+
+function Menu() {
+
+  return (
+    <div>
+      <h1>{DATA.title}</h1>
+      <select onChange={filtered}>
+        <option value="mexican">Mexican</option>
+        <option value="english">English</option>
+      </select>
+      <button onClick={clicked}>Flip Sort</button>
+      <ul>
+        {
+          DATA.items.filter( item => item.type === filterVal )
+            .sort(sortBy(sortVal))
+            .map( item => <li key={item.id}>{item.name}</li> )
+        }
+      </ul>
+    </div>
+  );
+}
+// debugger;
 ReactDOM.render(<Menu />, document.getElementById("app"));
 
 require("./tests").run();
