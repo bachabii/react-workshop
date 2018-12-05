@@ -1,6 +1,63 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+const contacts = [
+    'Ivan Bachabi',
+    'Monica Bachabi',
+    'Elena Bachabi'
+];
+
+// NOTE: This below code is by using React createElement to explicitely create dom elements (just straight js)
+// const element = React.createElement('select', {
+//         className: 'hot',  // React expects the use of DOM prop names (i.e className, not class)
+//         onChange: (event) => alert(`${contacts[event.target.value]} wins!`)
+//     },
+//     contacts.map( (contact, index) => React.createElement('option', { 
+//         key: index,
+//         value: index
+//     }, 
+//     contact) )
+// );
+
+// NOTE: This below code is the same as above implementation but in JSX
+
+// const changed = (event) => alert(`${contacts[event.target.value]} wins!`);
+
+// const element = (
+//     <select className='hot' onChange={changed}>
+//         {
+//             contacts.map((contact, index) => <option key={index} value={index}>{contact}</option>)
+//         }
+//     </select>
+// )
+// debugger;
+
+
+// NOTE: Take element code and place it within it's own function
+
+// const changed = (event) => alert(`${contacts[event.target.value]} wins!`);
+
+function ContactList(props) {
+
+    const changed = (event) => alert(`${contacts[event.target.value]} wins!`);
+
+    return (
+        <select className='hot' onChange={changed}>
+            {
+                props.contacts.map((contact, index) => <option key={index} value={index}>{contact}</option>)
+            }
+        </select>
+    );
+}
+
+const element = <ContactList contacts={contacts}/>
+
+
+ReactDOM.render(element, document.getElementById('app'));
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // React elements are plain JavaScript objects created with `createElement`
 // const element = React.createElement("input");
