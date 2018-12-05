@@ -34,40 +34,42 @@ let sortVal = "name";
   
 const filtered = (event) => {
   filterVal = event.target.value;
-  return updateThePage();
+  updateThePage();
 };
 
 const clicked = () => {
   sortVal = (sortVal.charAt(0) === '-') ? 'name' : '-name'; 
-  return updateThePage();
+  updateThePage();
 }
 
 const updateThePage = () => {
-  return ReactDOM.render(<Menu />, document.getElementById("app"));
+  ReactDOM.render(<Menu data={DATA} filter={filterVal} sort={sortVal}/>, document.getElementById("app"));
 };
 
 
-function Menu() {
+function Menu(props) {
+
+  const items = props.data.items.filter( item => item.type === props.filter )
+    .sort(sortBy(props.sort))
+    .map( item => <li key={item.id}>{item.name}</li> );
 
   return (
     <div>
-      <h1>{DATA.title}</h1>
+      <h1>{props.data.title}</h1>
+
       <select onChange={filtered}>
         <option value="mexican">Mexican</option>
         <option value="english">English</option>
       </select>
       <button onClick={clicked}>Flip Sort</button>
+
       <ul>
-        {
-          DATA.items.filter( item => item.type === filterVal )
-            .sort(sortBy(sortVal))
-            .map( item => <li key={item.id}>{item.name}</li> )
-        }
+        { items }
       </ul>
     </div>
   );
 }
-// debugger;
-ReactDOM.render(<Menu />, document.getElementById("app"));
+
+updateThePage();
 
 require("./tests").run();
