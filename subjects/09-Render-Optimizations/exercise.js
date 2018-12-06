@@ -24,13 +24,51 @@ class ListView extends React.Component {
     renderRowAtIndex: PropTypes.func.isRequired
   };
 
+  state = {
+    availableHeight: 0,
+    scrollPosition: 0
+  };
+
+  componentWillMount() {
+    if (localStorage.scrollPosition) {
+      this.setState({ scrollPosition: JSON.parse(localStorage.scrollPosition) });
+    }
+  }
+
+  componentDidMount() {
+    this.storeHeight();
+    window.addEventListener('resize', this.storeHeight);
+
+    window.addEventListener('beforeunload', () => {
+      localStorage.scrollPosition = JSON.stringify(this.state.scrollPosition);
+    });
+
+    if (this.node.scrollTop !== this.state.scrollPosition) {
+      this.node.scrollTop = this.state.scrollPosition;
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.storeHeight);
+  }
+
+  storeHeight = () => {
+    this.setState({ availableHeight: this.node.clientHeight });
+  }
+
+  scrolled = e => {
+    this.setState({ scrollPosition: e.target.scrollTop });
+  };
+
   render() {
+    const { availableHeight, scrollPosition } = this.state;
     const { numRows, rowHeight, renderRowAtIndex } = this.props;
     const totalHeight = numRows * rowHeight;
 
     // HINT: Make these numbers closer together!
-    const startIndex = 0;
-    const endIndex = numRows;
+    const startIndex = Math.floor(scrollPosition / rowHeight);
+    const endIndex =
+      Math.ceil(availableHeight / rowHeight) + startIndex;
 
     const items = [];
 
@@ -41,8 +79,17 @@ class ListView extends React.Component {
     }
 
     return (
-      <div style={{ height: "100vh", overflowY: "scroll" }}>
-        <div style={{ height: totalHeight }}>
+      <div
+        style={{ height: "100vh", overflowY: "scroll" }}
+        onScroll={this.scrolled}
+        ref={node => (this.node = node)}
+      >
+        <div
+          style={{
+            height: totalHeight,
+            paddingTop: startIndex * rowHeight
+          }}
+        >
           <ol>{items}</ol>
         </div>
       </div>

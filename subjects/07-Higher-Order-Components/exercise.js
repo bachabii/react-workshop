@@ -18,28 +18,103 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 
+// function withMouse(ComposedComponent) {
+
+//   return class extends React.Component {
+//     state = { x: 0, y: 0 };
+
+//     handleMouseMove = event => {
+//       this.setState({ x: event.clientX, y: event.clientY });
+//     };
+
+//     render() {
+//       return <ComposedComponent {...this.props} mouse={this.state} handleMouseMove={this.handleMouseMove}/>;
+//     }
+//   }
+// }
+
+// class App extends React.Component {
+
+//   render() {
+//     const { x, y } = this.props.mouse;
+
+//     return (
+//       <div className="container" onMouseMove={this.props.handleMouseMove}>
+//         <h1>
+//           The mouse position is ({x}, {y})
+//         </h1>
+//       </div>
+//     );
+//   }
+// }
+
+// const AppWithMouse = withMouse(App);
+
+// ReactDOM.render(<AppWithMouse />, document.getElementById("app"));
+
+// Version 2
+
 function withMouse(ComposedComponent) {
-  // TODO
+  return class extends React.Component {
+    state = { x: 0, y: 0 };
+
+    handleMouseMove = event => {
+      this.setState({ x: event.clientX, y: event.clientY });
+    };
+
+    render() {
+      const { x, y } = this.state;
+      return (
+        <div className="container" onMouseMove={this.handleMouseMove}>
+          <ComposedComponent {...this.props} x={x} y={y} />
+        </div>
+      );
+    }
+  };
+}
+
+function withCat(Component) {
+  return class extends React.Component {
+    state = { top: 0, left: 0 };
+
+    componentDidUpdate(prevProps) {
+      const { x, y } = this.props;
+
+      if (x !== prevProps.x || y !== prevProps.y) {
+        this.setState({
+          top: y - Math.round(this.node.offsetHeight / 2),
+          left: x - Math.round(this.node.offsetWidth / 2)
+        });
+      }
+    }
+
+    render() {
+      return (
+        <div>
+          <div
+            ref={node => (this.node = node)}
+            className="cat"
+            style={this.state}
+          />
+          <Component {...this.props} />
+        </div>
+      );
+    }
+  };
 }
 
 class App extends React.Component {
-  state = { x: 0, y: 0 };
-
-  handleMouseMove = event => {
-    this.setState({ x: event.clientX, y: event.clientY });
-  };
-
   render() {
-    const { x, y } = this.state;
+    const { x, y } = this.props;
 
     return (
-      <div className="container" onMouseMove={this.handleMouseMove}>
-        <h1>
-          The mouse position is ({x}, {y})
-        </h1>
-      </div>
+      <h1>
+        The mouse position is ({x}, {y})
+      </h1>
     );
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("app"));
+const AppWithMouse = withMouse(withCat(App));
+
+ReactDOM.render(<AppWithMouse />, document.getElementById("app"));

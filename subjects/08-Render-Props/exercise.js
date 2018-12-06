@@ -25,7 +25,11 @@ import PropTypes from "prop-types";
 import LoadingDots from "./LoadingDots";
 import getAddressFromCoords from "./utils/getAddressFromCoords";
 
-class App extends React.Component {
+class GeoPosition extends React.Component {
+  static propTypes = {
+    children: PropTypes.func.isRequired
+  };
+
   state = {
     coords: {
       latitude: null,
@@ -55,19 +59,89 @@ class App extends React.Component {
   }
 
   render() {
+    return this.props.children(this.state);
+  }
+}
+
+class GeoAddress extends React.Component {
+  static propTypes = {
+    children: PropTypes.func.isRequired,
+    long: PropTypes.number,
+    lat: PropTypes.number
+  };
+
+  state = { address: null };
+
+  fetchAddress() {
+    const { lat, long } = this.props;
+    if (lat && long) {
+      getAddressFromCoords(lat, long).then(address => {
+        this.setState({ address: address });
+      });
+    }
+  }
+
+  componentDidMount() {
+    this.fetchAddress();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { lat: prevLat, long: prevLong } = prevProps;
+    const { lat: nextLat, long: nextLong } = this.props;
+
+    if (prevLat !== nextLat || prevLong !== nextLong) {
+      this.fetchAddress();
+    }
+  }
+
+  render() {
+    return this.props.children(this.state.address);
+  }
+}
+
+// How to take render props and put in HOC
+
+// function withGeo(Component) {
+//   return props => (
+//     <GeoPosition render={state => <Component {...props} geo={state} />} />
+//     );
+// }
+
+class App extends React.Component {
+  // const { error, coords } = this.props;
+  render() {
     return (
       <div>
         <h1>Geolocation</h1>
-        {this.state.error ? (
-          <div>Error: {this.state.error.message}</div>
-        ) : (
-          <dl>
-            <dt>Latitude</dt>
-            <dd>{this.state.coords.latitude || <LoadingDots />}</dd>
-            <dt>Longitude</dt>
-            <dd>{this.state.coords.longitude || <LoadingDots />}</dd>
-          </dl>
-        )}
+        <GeoPosition>
+          {data => (
+            <div>
+              {/* <h1>Geolocation</h1> */}
+              {data.error ? (
+                <div>Error: {data.error.message}</div>
+              ) : (
+                <dl>
+                  <dt>Latitude</dt>
+                  <dd>{data.coords.latitude || <LoadingDots />}</dd>
+                  <dt>Longitude</dt>
+                  <dd>{data.coords.longitude || <LoadingDots />}</dd>
+                </dl>
+              )}
+            </div>
+          )}
+        </GeoPosition>
+
+        <h1>Geoaddress</h1>
+        <GeoPosition>
+          {data => (
+            <GeoAddress
+              long={data.coords.longitude}
+              lat={data.coords.latitude}
+            >
+              {address => <p>{address || <LoadingDots />}</p>}
+            </GeoAddress>
+          )}
+        </GeoPosition>
       </div>
     );
   }
