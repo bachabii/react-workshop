@@ -15,17 +15,49 @@ styles.theremin = {
   display: "inline-block"
 };
 
-class App extends React.Component {
+class Tone extends React.Component {
   componentDidMount() {
     this.oscillator = createOscillator();
+
+    this.doWork();
   }
 
+  componentDidUpdate() {
+    this.doWork();
+  }
+
+  doWork() {
+    if (this.props.isPlaying) {
+      this.oscillator.play();
+    } else {
+      this.oscillator.stop();
+    }
+
+    this.oscillator.setPitchBend(this.props.pitch);
+    this.oscillator.setVolume(this.props.volume);
+    this.oscillator.setType(this.props.type);
+  }
+
+  render() {
+    return <h1> I'm a {this.props.type} wave</h1>;
+  }
+}
+
+class Theremin extends React.Component {
+  state = {
+    isPlaying: false,
+    pitch: 0.2,
+    volume: 0.2
+  };
+
   play = () => {
-    this.oscillator.play();
+    // this.oscillator.play();
+    this.setState({ isPlaying: true });
   };
 
   stop = () => {
-    this.oscillator.stop();
+    // this.oscillator.stop();
+    this.setState({ isPlaying: false });
   };
 
   changeTone = event => {
@@ -39,26 +71,87 @@ class App extends React.Component {
     const pitch = (clientX - left) / (right - left);
     const volume = 1 - (clientY - top) / (bottom - top);
 
-    this.oscillator.setPitchBend(pitch);
-    this.oscillator.setVolume(volume);
+    // this.oscillator.setPitchBend(pitch);
+    // this.oscillator.setVolume(volume);
+    this.setState({ pitch, volume });
   };
 
   render() {
     return (
+      <div
+        style={styles.theremin}
+        onMouseEnter={this.play}
+        onMouseLeave={this.stop}
+        onMouseMove={this.changeTone}
+      >
+        <Tone {...this.state} type={this.props.type}/>
+      </div>
+    );
+  }
+}
+
+class App extends React.Component {
+  render() {
+    return (
       <div>
         <h1>What does it mean to be declarative?</h1>
-        <div
-          style={styles.theremin}
-          onMouseEnter={this.play}
-          onMouseLeave={this.stop}
-          onMouseMove={this.changeTone}
-        />
+        <Theremin type='sine'/>
+        <Theremin type='triangle'/>
+        <Theremin type='square'/>
+        <Theremin type='sawtooth'/>
       </div>
     );
   }
 }
 
 ReactDOM.render(<App />, document.getElementById("app"));
+
+// Original lecture code below
+
+// class App extends React.Component {
+//   componentDidMount() {
+//     this.oscillator = createOscillator();
+//   }
+
+//   play = () => {
+//     this.oscillator.play();
+//   };
+
+//   stop = () => {
+//     this.oscillator.stop();
+//   };
+
+//   changeTone = event => {
+//     const { clientX, clientY } = event;
+//     const {
+//       top,
+//       right,
+//       bottom,
+//       left
+//     } = event.target.getBoundingClientRect();
+//     const pitch = (clientX - left) / (right - left);
+//     const volume = 1 - (clientY - top) / (bottom - top);
+
+//     this.oscillator.setPitchBend(pitch);
+//     this.oscillator.setVolume(volume);
+//   };
+
+//   render() {
+//     return (
+//       <div>
+//         <h1>What does it mean to be declarative?</h1>
+//         <div
+//           style={styles.theremin}
+//           onMouseEnter={this.play}
+//           onMouseLeave={this.stop}
+//           onMouseMove={this.changeTone}
+//         />
+//       </div>
+//     );
+//   }
+// }
+
+// ReactDOM.render(<App />, document.getElementById("app"));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Can't predict what the sound is going to be by looking at state or the render
