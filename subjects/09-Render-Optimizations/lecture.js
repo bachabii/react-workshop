@@ -2,8 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 
-class TodoItem extends React.Component {
+class TodoItem extends React.PureComponent {
   state = { done: false };
+
+  // Short circuits rendering process by determine ahead of time if anything worthwhile has changed with this component
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   return (
+  //     nextProps.body !== this.props.body ||
+  //     nextState.done !== this.state.done
+  //   );
+  // }
 
   render() {
     return (

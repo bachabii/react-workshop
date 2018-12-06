@@ -4,26 +4,38 @@ import PropTypes from "prop-types";
 
 import createMediaListener from "./utils/createMediaListener";
 
-const media = createMediaListener({
-  big: "(min-width : 1000px)",
-  tiny: "(max-width: 400px)"
-});
+//Questions?
+// What is real-life usage of HOC?
+// Primarily for sharing with others? or for sharing within same app?
+
+// Is it used to implement some effect/functionality on some other random component?
+
+
+function withMedia(ComposedComponent, queries) {
+  const media = createMediaListener(queries);
+
+  return class extends React.Component {
+    state = {
+      media: media.getState()
+    };
+  
+    componentDidMount() {
+      media.listen(media => this.setState({ media }));
+    }
+  
+    componentWillUnmount() {
+      media.dispose();
+    }
+
+    render() {
+      return <ComposedComponent {...this.props} media={this.state.media} />;
+    }
+  }
+}
 
 class App extends React.Component {
-  state = {
-    media: media.getState()
-  };
-
-  componentDidMount() {
-    media.listen(media => this.setState({ media }));
-  }
-
-  componentWillUnmount() {
-    media.dispose();
-  }
-
   render() {
-    const { media } = this.state;
+    const { media } = this.props;
 
     return media.big ? (
       <h1>Hey, this is a big screen</h1>
@@ -35,7 +47,12 @@ class App extends React.Component {
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("app"));
+const AppWithMedia = withMedia(App, {
+  big: "(min-width : 1000px)",
+  tiny: "(max-width: 400px)"
+});
+
+ReactDOM.render(<AppWithMedia />, document.getElementById("app"));
 
 ////////////////////////////////////////////////////////////////////////////////
 // We can move all of that code into a higher-order component. A higher-order
