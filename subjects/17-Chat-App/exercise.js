@@ -34,7 +34,7 @@ sendMessage({
   text: 'hello, this is a message'
 })
 
-const unsubscribe = subscribeToMessages(messages => {
+const subscribe = subscribeToMessages(messages => {
   // here are your messages as an array, it will be called
   // every time the messages change
 })
@@ -44,43 +44,80 @@ unsubscribe() // stop listening for new messages
 The world is your oyster!
 */
 
+function MessageItem(props) {
+  return (
+    <li className="message-group">
+        <div className="message-group-avatar">
+          <img src={props.msg.photoURL} />
+        </div>
+        <ol className="messages">
+          <li className="message">{props.msg.text}</li>
+        </ol>
+      </li>
+  );
+}
+
 class Chat extends React.Component {
+  state = { user: null, messages: [] };
+
+  componentDidMount() {
+    // Called immediately after this element is mounted into the DOM
+
+    login(user => {
+      this.setState({ user });
+
+      subscribeToMessages( messages => {
+        this.setState({ messages });
+      });
+
+    });
+    //
+  }
+
+  componentDidUpdate() {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom = () => {
+    const messages = this.refs.messages;
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  componentWillUnmount() {
+    // Called immediately before this element is removed from the DOM
+
+    this.unsubscribe();
+  }
+
+  handleSubmit = event => {
+    event.preventDefault();
+    // const e = event.nativeEvent;
+    // const message = e.target[0].value;
+    const message = this.refs.message.value;
+
+    sendMessage({
+      userId: this.state.user.id,
+      photoURL: this.state.user.photoURL,
+      text: message
+    });
+
+    event.target.reset();
+  }
   render() {
     return (
       <div className="chat">
         <header className="chat-header">
           <h1 className="chat-title">HipReact</h1>
-          <p className="chat-message-count"># messages: 8</p>
+          <p className="chat-message-count"># messages: {this.state.messages.length}</p>
         </header>
-        <div className="messages">
+        <div className="messages" ref="messages">
           <ol className="message-groups">
-            <li className="message-group">
-              <div className="message-group-avatar">
-                <img src="https://avatars1.githubusercontent.com/u/92839" />
-              </div>
-              <ol className="messages">
-                <li className="message">Hey, Bruce!</li>
-                <li className="message">
-                  So, a QA Engineer walks into a bar.
-                </li>
-                <li className="message">Orders a beer.</li>
-                <li className="message">Orders 0 beers.</li>
-                <li className="message">Orders 999999999 beers.</li>
-                <li className="message">Orders -1 beers.</li>
-                <li className="message">Orders a sfdeljknesv.</li>
-              </ol>
-            </li>
-            <li className="message-group">
-              <div className="message-group-avatar">
-                <img src="https://pbs.twimg.com/profile_images/534863086276988928/bX3juDCC_400x400.jpeg" />
-              </div>
-              <ol className="messages">
-                <li className="message">Hahaha 😅</li>
-              </ol>
-            </li>
+            {this.state.messages.map( (msg) => 
+              <MessageItem key={msg.id} msg={msg}/>
+            )}
           </ol>
         </div>
-        <form className="new-message-form">
+        <form className="new-message-form" onSubmit={this.handleSubmit}>
           <div className="new-message">
             <input
               ref="message"
