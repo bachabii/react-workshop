@@ -4,18 +4,30 @@ import PropTypes from "prop-types";
 
 import * as styles from "./styles";
 
-function TabList({ children, _activeIndex, _onTabSelect }) {
-  return (
-    <div>
-      {React.Children.map(children, (child, index) =>
-        React.cloneElement(child, {
-          _isActive: index === _activeIndex,
-          _onSelect: () => _onTabSelect(index)
-        })
-      )}
-    </div>
-  );
+const TabsContext = React.createContext();
+// <TabsContext.Provider> // thrower
+// <TabsContext.Consumer> // catcher
+
+class TabList extends React.Component {
+
+  render() {
+    const { _activeIndex, _onTabSelect } = this.context;
+
+    return (
+      <div>
+        {React.Children.map(this.props.children, (child, index) =>
+          React.cloneElement(child, {
+            _isActive: index === _activeIndex,
+            _onSelect: () => _onTabSelect(index)
+          })
+        )}
+      </div>
+    );
+  }
+  
 }
+
+TabList.contextType = TabsContext;
 
 function Tab({ children, disabled, _isActive, _onSelect }) {
   return (
@@ -24,8 +36,8 @@ function Tab({ children, disabled, _isActive, _onSelect }) {
         disabled
           ? styles.disabledTab
           : _isActive
-            ? styles.activeTab
-            : styles.tab
+          ? styles.activeTab
+          : styles.tab
       }
       onClick={disabled ? null : _onSelect}
     >
@@ -34,12 +46,15 @@ function Tab({ children, disabled, _isActive, _onSelect }) {
   );
 }
 
-function TabPanels({ children, _activeIndex }) {
-  return (
-    <div style={styles.tabPanels}>
-      {React.Children.toArray(children)[_activeIndex]}
-    </div>
-  );
+class TabPanels extends React.Component {
+  render() {
+    return (
+      <div style={styles.tabPanels}>
+        {React.Children.toArray(this.props.children)[this.context.activeIndex]}
+      </div>
+    );
+  }
+  
 }
 
 function TabPanel({ children }) {
@@ -49,26 +64,20 @@ function TabPanel({ children }) {
 class Tabs extends React.Component {
   state = { activeIndex: 0 };
 
-  render() {
-    const children = React.Children.map(
-      this.props.children,
-      (child, index) => {
-        if (child.type === TabPanels) {
-          return React.cloneElement(child, {
-            _activeIndex: this.state.activeIndex
-          });
-        } else if (child.type === TabList) {
-          return React.cloneElement(child, {
-            _activeIndex: this.state.activeIndex,
-            _onTabSelect: index => this.setState({ activeIndex: index })
-          });
-        } else {
-          return child;
-        }
-      }
-    );
+  selectIndex = index => this.setState({ activeIndex: index });
 
-    return <div>{children}</div>;
+  render() {
+    return (
+      <TabsContext.Provider
+        value={{
+          _activeIndex: this.state.activeIndex,
+          _onTabSelect: index => this.setState({ activeIndex: index })
+        }}
+      >
+        <div>{this.props.children}</div>
+      </TabsContext.Provider>
+    )
+    
   }
 }
 
@@ -76,22 +85,27 @@ function App() {
   return (
     <div>
       <Tabs>
-        <TabList>
-          <Tab>Tacos</Tab>
-          <Tab disabled>Burritos</Tab>
-          <Tab>Coconut Korma</Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel>
-            <p>Tacos are delicious</p>
-          </TabPanel>
-          <TabPanel>
-            <p>Sometimes a burrito is what you really need</p>
-          </TabPanel>
-          <TabPanel>
-            <p>Might be your best option</p>
-          </TabPanel>
-        </TabPanels>
+        <div>
+          <TabList>
+            <Tab>Tacos</Tab>
+            <Tab disabled>Burritos</Tab>
+            <Tab>Coconut Korma</Tab>
+          </TabList>
+        </div>
+
+        <div>
+          <TabPanels>
+            <TabPanel>
+              <p>Tacos are delicious</p>
+            </TabPanel>
+            <TabPanel>
+              <p>Sometimes a burrito is what you really need</p>
+            </TabPanel>
+            <TabPanel>
+              <p>Might be your best option</p>
+            </TabPanel>
+          </TabPanels>
+        </div>
       </Tabs>
     </div>
   );

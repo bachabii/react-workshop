@@ -19,33 +19,92 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 
+const FormContext = React.createContext();
+
 class Form extends React.Component {
+  state = { values: {} };
+
+  handleSubmit = () => {
+    if (this.props.onSubmit) this.props.onSubmit(this.state.values);
+  };  
+
+  updateNames = (name, value) => {
+    this.setState(state => ({
+      values: {
+        ...state.values,
+        [name]: value
+      }
+    }));
+  }
+
+  handleReset = () => {
+    this.setState({ values: {} });
+  }
+
   render() {
-    return <div>{this.props.children}</div>;
+    return (
+      <FormContext.Provider
+        value={{
+          handleSubmit: this.handleSubmit,
+          inputChanged: this.updateNames,
+          handleReset: this.handleReset,
+          values: this.state.values
+        }}
+      >
+        <div>{this.props.children}</div>
+      </FormContext.Provider>
+    );
   }
 }
 
 class SubmitButton extends React.Component {
   render() {
-    return <button>{this.props.children}</button>;
+    return <button onClick={this.context.handleSubmit}>{this.props.children}</button>;
   }
 }
 
+SubmitButton.contextType = FormContext;
+
+class ResetButton extends React.Component {
+  render() {
+    return <button onClick={this.context.handleReset}>{this.props.children}</button>;
+  }
+}
+
+ResetButton.contextType = FormContext;
+
 class TextInput extends React.Component {
+  handleKeyDown = event => {
+    if (event.key === 'Enter') {
+      this.context.handleSubmit();
+    }
+  }
+
+  handleInputChange = () => {
+    this.context.inputChanged(this.props.name, this.node.value);
+  }
+
   render() {
     return (
       <input
         type="text"
         name={this.props.name}
         placeholder={this.props.placeholder}
+        onKeyDown={this.handleKeyDown}
+        onChange={this.handleInputChange}
+        value={this.context.values[this.props.name] || ""}
+        ref={node => (this.node = node)}
       />
     );
   }
 }
 
+TextInput.contextType = FormContext;
+
 class App extends React.Component {
-  handleSubmit = () => {
-    alert("YOU WIN!");
+
+  handleSubmit = (values) => {
+    alert(`YOU WIN! ${values.firstName} ${values.lastName}`);
   };
 
   render() {
@@ -61,7 +120,8 @@ class App extends React.Component {
             <TextInput name="lastName" placeholder="Last Name" />
           </p>
           <p>
-            <SubmitButton>Submit</SubmitButton>
+            <SubmitButton>Submit</SubmitButton>{" "}
+            <ResetButton>Reset</ResetButton>
           </p>
         </Form>
       </div>
