@@ -18,6 +18,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
+import { useState, useContext, useEffect } from "react";
 
 const FormContext = React.createContext();
 
@@ -57,49 +58,45 @@ class Form extends React.Component {
   }
 }
 
-class SubmitButton extends React.Component {
-  render() {
-    return <button onClick={this.context.handleSubmit}>{this.props.children}</button>;
-  }
+function SubmitButton(props) {
+  const form = useContext(FormContext);
+  return <button onClick={form.handleSubmit}>{props.children}</button>;
 }
 
-SubmitButton.contextType = FormContext;
 
-class ResetButton extends React.Component {
-  render() {
-    return <button onClick={this.context.handleReset}>{this.props.children}</button>;
-  }
+function ResetButton(props) {
+  const form = useContext(FormContext);
+    return <button onClick={form.handleReset}>{props.children}</button>;
 }
 
-ResetButton.contextType = FormContext;
-
-class TextInput extends React.Component {
-  handleKeyDown = event => {
+function TextInput({ name, defaultValue, placeholder }) {
+  const form = useContext(FormContext);
+  const handleKeyDown = event => {
     if (event.key === 'Enter') {
-      this.context.handleSubmit();
+      form.handleSubmit();
     }
   }
 
-  handleInputChange = () => {
-    this.context.inputChanged(this.props.name, this.node.value);
+  const handleInputChange = (event) => {
+    form.inputChanged(name, event.target.value);
   }
 
-  render() {
-    return (
-      <input
-        type="text"
-        name={this.props.name}
-        placeholder={this.props.placeholder}
-        onKeyDown={this.handleKeyDown}
-        onChange={this.handleInputChange}
-        value={this.context.values[this.props.name] || ""}
-        ref={node => (this.node = node)}
-      />
-    );
-  }
+  useEffect(() => {
+    form.inputChanged(name, defaultValue)
+  }, []);
+
+  return (
+    <input
+      type="text"
+      name={name}
+      placeholder={placeholder}
+      onKeyDown={handleKeyDown}
+      onChange={handleInputChange}
+      value={form.values[name] || ""}
+    />
+  );
+
 }
-
-TextInput.contextType = FormContext;
 
 class App extends React.Component {
 
@@ -116,8 +113,8 @@ class App extends React.Component {
 
         <Form onSubmit={this.handleSubmit}>
           <p>
-            <TextInput name="firstName" placeholder="First Name" />{" "}
-            <TextInput name="lastName" placeholder="Last Name" />
+            <TextInput name="firstName" defaultValue="" placeholder="First Name" />{" "}
+            <TextInput name="lastName" defaultValue="" placeholder="Last Name" />
           </p>
           <p>
             <SubmitButton>Submit</SubmitButton>{" "}

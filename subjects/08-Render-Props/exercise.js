@@ -21,6 +21,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
 
 import LoadingDots from "./LoadingDots";
 import getAddressFromCoords from "./utils/getAddressFromCoords";
@@ -63,40 +64,60 @@ class GeoPosition extends React.Component {
   }
 }
 
-class GeoAddress extends React.Component {
-  static propTypes = {
-    children: PropTypes.func.isRequired,
-    long: PropTypes.number,
-    lat: PropTypes.number
-  };
+// class GeoAddress extends React.Component {
+//   static propTypes = {
+//     children: PropTypes.func.isRequired,
+//     long: PropTypes.number,
+//     lat: PropTypes.number
+//   };
 
-  state = { address: null };
+//   state = { address: null };
 
-  fetchAddress() {
-    const { lat, long } = this.props;
+//   fetchAddress() {
+//     const { lat, long } = this.props;
+//     if (lat && long) {
+//       getAddressFromCoords(lat, long).then(address => {
+//         this.setState({ address: address });
+//       });
+//     }
+//   }
+
+//   componentDidMount() {
+//     this.fetchAddress();
+//   }
+
+//   componentDidUpdate(prevProps) {
+//     const { lat: prevLat, long: prevLong } = prevProps;
+//     const { lat: nextLat, long: nextLong } = this.props;
+
+//     if (prevLat !== nextLat || prevLong !== nextLong) {
+//       this.fetchAddress();
+//     }
+//   }
+
+//   render() {
+//     return this.props.children(this.state.address);
+//   }
+// }
+
+function GeoAddress({ lat, long, children }) {
+  const [address, setAddress] = useState(null);
+
+  const fetchAddress = () => {
     if (lat && long) {
-      getAddressFromCoords(lat, long).then(address => {
-        this.setState({ address: address });
-      });
+      getAddressFromCoords(lat, long).then(setAddress);
     }
   }
 
-  componentDidMount() {
-    this.fetchAddress();
-  }
+  useEffect(() => {
+    fetchAddress();
+  }, []);
 
-  componentDidUpdate(prevProps) {
-    const { lat: prevLat, long: prevLong } = prevProps;
-    const { lat: nextLat, long: nextLong } = this.props;
+  useEffect(() => {
+    fetchAddress();
+  }, [lat, long]);
 
-    if (prevLat !== nextLat || prevLong !== nextLong) {
-      this.fetchAddress();
-    }
-  }
-
-  render() {
-    return this.props.children(this.state.address);
-  }
+  return children(address);
 }
 
 // How to take render props and put in HOC
